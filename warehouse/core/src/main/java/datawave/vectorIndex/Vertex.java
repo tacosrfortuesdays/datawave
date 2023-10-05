@@ -23,16 +23,13 @@ public class Vertex {
 
     @Override
     public boolean equals(Object obj) {
-        log.warn(String.format("CHECKING OBJ IS THIS"));
         if (this == obj) {
             return true;
         }
-        log.warn(String.format("CHECKING OBJ AND CLASS"));
         if (obj == null || obj.getClass() != this.getClass()) {
             return false;
         }
         Vertex other = (Vertex) obj;
-        log.warn(String.format("ID STRINGS ARE %s AND %s", this.uid(), other.uid()));
         return StringUtils.equals(this.uid(), other.uid());
     }
 

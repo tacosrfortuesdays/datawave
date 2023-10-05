@@ -51,11 +51,6 @@ public class MemoryVectorGraph extends VectorGraph {
 
         // remove outgoing edges and node
         adjVertices.remove(new Vertex(u.uid(), new byte[] {}));
-        // getNeighbors(u).forEachRemaining(v -> {
-        // removeDirectedEdge(v, u);
-        // removeDirectedEdge(u, v);
-        // });
-        // adjVertices.values().forEach(e -> e.remove(v));
     }
 
     public void addDirectedEdge(Vertex source, Vertex sink) {
@@ -71,11 +66,6 @@ public class MemoryVectorGraph extends VectorGraph {
     }
 
     public Iterator<Vertex> getNeighbors(Vertex x) {
-        log.warn(String.format("VERTEX %s", x.uid()));
-        for (Vertex vv : adjVertices.keySet()) {
-            log.warn(String.format("ADJ LIST HAS %s", vv.uid()));
-        }
-        log.warn(String.format("GET RETURNED %s", adjVertices.get(x)));
         return adjVertices.get(x).iterator();
     }
 
