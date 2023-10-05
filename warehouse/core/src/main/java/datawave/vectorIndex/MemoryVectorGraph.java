@@ -6,10 +6,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 
+/**
+ * Code is modified from https://www.baeldung.com/java-graphs
+ */
 public class MemoryVectorGraph extends VectorGraph {
     private static final Logger log = Logger.getLogger(MemoryVectorGraph.class);
 
@@ -25,13 +29,33 @@ public class MemoryVectorGraph extends VectorGraph {
         return adjVertices.size();
     }
 
+    @VisibleForTesting
+    public int numEdges() {
+        int cnt = 0;
+        for (List<Vertex> L : adjVertices.values()) {
+            cnt += L.size();
+        }
+        return cnt;
+    }
+
     public void addVertex(Vertex v) {
         adjVertices.putIfAbsent(v, new ArrayList<>());
     }
 
-    public void removeVertex(Vertex v) {
-        adjVertices.values().forEach(e -> e.remove(v));
-        adjVertices.remove(new Vertex(v.uid(), new byte[] {}));
+    public void removeVertex(Vertex u) {
+        // remove incoming edges
+        List<Vertex> nbrs = getNeighborList(u.uid());
+        for (Vertex v : nbrs) {
+            removeDirectedEdge(v, u);
+        }
+
+        // remove outgoing edges and node
+        adjVertices.remove(new Vertex(u.uid(), new byte[] {}));
+        // getNeighbors(u).forEachRemaining(v -> {
+        // removeDirectedEdge(v, u);
+        // removeDirectedEdge(u, v);
+        // });
+        // adjVertices.values().forEach(e -> e.remove(v));
     }
 
     public void addDirectedEdge(Vertex source, Vertex sink) {
@@ -47,10 +71,15 @@ public class MemoryVectorGraph extends VectorGraph {
     }
 
     public Iterator<Vertex> getNeighbors(Vertex x) {
+        log.warn(String.format("VERTEX %s", x.uid()));
+        for (Vertex vv : adjVertices.keySet()) {
+            log.warn(String.format("ADJ LIST HAS %s", vv.uid()));
+        }
+        log.warn(String.format("GET RETURNED %s", adjVertices.get(x)));
         return adjVertices.get(x).iterator();
     }
 
     public List<Vertex> getNeighborList(String uid) {
-        return adjVertices.get(new MemoryVertex(uid, new byte[] {}));
+        return adjVertices.get(new Vertex(uid, new byte[] {}));
     }
 }

@@ -21,9 +21,9 @@ public class MemoryVectorGraphTest {
     @Before
     public void setup() {
         this.graph = new MemoryVectorGraph();
-        MemoryVertex A = new MemoryVertex("0", new byte[] {});
-        MemoryVertex B = new MemoryVertex("1", new byte[] {});
-        MemoryVertex C = new MemoryVertex("2", new byte[] {});
+        Vertex A = new Vertex("0", new byte[] {});
+        Vertex B = new Vertex("1", new byte[] {});
+        Vertex C = new Vertex("2", new byte[] {});
 
         this.graph.addEdge(A, B);
         this.graph.addEdge(B, C);
@@ -52,22 +52,23 @@ public class MemoryVectorGraphTest {
 
     @Test
     public void testAddVertex() {
-        MemoryVertex D = new MemoryVertex("3", new byte[] {});
+        Vertex D = new Vertex("3", new byte[] {});
         this.graph.addVertex(D);
         assertEquals(4, this.graph.numVertices());
     }
 
     @Test
     public void testRemoveVertex() {
-        MemoryVertex B = new MemoryVertex("1", new byte[] {});
+        Vertex B = new Vertex("1", new byte[] {});
         graph.removeVertex(B);
         assertEquals(2, graph.numVertices());
+        assertEquals(0, graph.numEdges());
     }
 
     @Test
     public void testAddEdge() {
-        MemoryVertex A = new MemoryVertex("0", new byte[] {});
-        MemoryVertex C = new MemoryVertex("2", new byte[] {});
+        Vertex A = new Vertex("0", new byte[] {});
+        Vertex C = new Vertex("2", new byte[] {});
         graph.addEdge(A, C);
         List<Vertex> nbrsA = graph.getNeighborList("0");
         List<Vertex> nbrsC = graph.getNeighborList("2");
@@ -77,8 +78,8 @@ public class MemoryVectorGraphTest {
 
     @Test
     public void testRemoveEdge() {
-        MemoryVertex A = new MemoryVertex("0", new byte[] {});
-        MemoryVertex B = new MemoryVertex("1", new byte[] {});
+        Vertex A = new Vertex("0", new byte[] {});
+        Vertex B = new Vertex("1", new byte[] {});
         graph.removeEdge(A, B);
         List<Vertex> nbrsA = graph.getNeighborList("0");
         List<Vertex> nbrsB = graph.getNeighborList("1");
@@ -92,6 +93,6 @@ public class MemoryVectorGraphTest {
         List nbrs = IteratorUtils.toList(itr);
         assertEquals(2, nbrs.size());
         assertEquals("0", ((Vertex) (nbrs.get(0))).uid());
-        assertEquals("2", ((Vertex) (nbrs.get(2))).uid());
+        assertEquals("2", ((Vertex) (nbrs.get(1))).uid());
     }
 }
