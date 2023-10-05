@@ -7,38 +7,42 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.hadoop.shaded.org.apache.commons.collections.IteratorUtils;
+import org.apache.log4j.Logger;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.BeforeEach;
+
+import datawave.iterators.CountMetadataCombiner;
 
 //Will make this abstract to test accumulo and in memory implementations
 public class MemoryVectorGraphTest {
-    MemoryVectorGraph graph;
+    private static final Logger log = Logger.getLogger(MemoryVectorGraphTest.class);
+    private MemoryVectorGraph graph;
 
-    @BeforeEach
-    public void init() {
-        graph = new MemoryVectorGraph();
+    @Before
+    public void setup() {
+        this.graph = new MemoryVectorGraph();
         MemoryVertex A = new MemoryVertex("0", new byte[] {});
         MemoryVertex B = new MemoryVertex("1", new byte[] {});
         MemoryVertex C = new MemoryVertex("2", new byte[] {});
 
-        graph.addEdge(A, B);
-        graph.addEdge(B, C);
+        this.graph.addEdge(A, B);
+        this.graph.addEdge(B, C);
 
     }
 
     @Test
     public void checkInit() {
-        List<Vertex> nbrsA = graph.getNeighborList("0");
-        List<Vertex> nbrsB = graph.getNeighborList("1");
-        List<Vertex> nbrsC = graph.getNeighborList("2");
+        List<Vertex> nbrsA = this.graph.getNeighborList("0");
+        List<Vertex> nbrsB = this.graph.getNeighborList("1");
+        List<Vertex> nbrsC = this.graph.getNeighborList("2");
 
         assertNotNull(nbrsA);
         assertNotNull(nbrsB);
         assertNotNull(nbrsC);
 
-        assertEquals(nbrsA.size(), 1);
-        assertEquals(nbrsB.size(), 2);
-        assertEquals(nbrsC.size(), 1);
+        assertEquals(1, nbrsA.size());
+        assertEquals(2, nbrsB.size());
+        assertEquals(1, nbrsC.size());
 
         assertEquals("0", nbrsB.get(0).uid());
         assertEquals("2", nbrsB.get(1).uid());
@@ -49,8 +53,8 @@ public class MemoryVectorGraphTest {
     @Test
     public void testAddVertex() {
         MemoryVertex D = new MemoryVertex("3", new byte[] {});
-        graph.addVertex(D);
-        assertEquals(4, graph.numVertices());
+        this.graph.addVertex(D);
+        assertEquals(4, this.graph.numVertices());
     }
 
     @Test
@@ -85,9 +89,9 @@ public class MemoryVectorGraphTest {
     @Test
     public void testGetNeighbors() {
         Iterator<Vertex> itr = graph.getNeighbors(new Vertex("1", new byte[] {}));
-        List<Vertex> nbrs = IteratorUtils.toList(itr);
+        List nbrs = IteratorUtils.toList(itr);
         assertEquals(2, nbrs.size());
-        assertEquals("0", nbrs.get(0).uid());
-        assertEquals("2", nbrs.get(2).uid());
+        assertEquals("0", ((Vertex) (nbrs.get(0))).uid());
+        assertEquals("2", ((Vertex) (nbrs.get(2))).uid());
     }
 }
