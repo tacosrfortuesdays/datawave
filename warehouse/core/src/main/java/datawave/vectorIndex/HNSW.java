@@ -1,76 +1,108 @@
 package datawave.vectorIndex;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
+import java.util.PriorityQueue;
+import java.util.function.Function;
 
 public class HNSW {
+    private static final Function<Vertex, Boolean> noFilter = v -> true;
 
     private final int M;
     private final int Mmax;
     private final int efConstruction;
-private final int mL;
+    private final int maxLevel;
+    private final int dim;
 
-    VectorGraph graph;
+    ArrayList<VectorGraph> hGraph;
+    VectorGraph zeroLevel;
+    private static final Function<Pair<List<Double>, List<Double>>, Double> dist = a -> Distance.l2Distance(a.getLeft(),a.getRight());
 
     public HNSW(int dim) {
         this(dim, 20, 2, 3, 4);
     }
-    public HNSW(int dim, int M, int Mmax, int efConstruction, int mL) {
-        this.graph = new MemoryVectorGraph();
+    public HNSW(int dim, int M, int Mmax, int efConstruction, int maxLevel) {
+        this.zeroLevel = new MemoryVectorGraph();
+        this.hGraph = new ArrayList<>(maxLevel);
+        for(int i=0; i<maxLevel-1; i++){
+            VectorGraph g = new MemoryVectorGraph();
+            hGraph.add(g);
+        }
         this.M = M;
         this.Mmax = Mmax;
         this.efConstruction = efConstruction;
-        this.mL = mL;
-        this.dim =
+        this.maxLevel = maxLevel;
+        this.dim = dim;
     }
 
-    public double innerProductNorm(ArrayList<Double> A, ArrayList<Double> B){
-        if(A.size() != this.dim || B.size() != this.dim){
-            throw new ArrayIndexOutOfBoundsException("Cannot perform inner product on unexpected vector dimensions, dimA=%d, dimB=%d", A.size(), B.size());
-        }
-        Iterator<Double> itrA = A.iterator();
-        Iterator<Double> itrB = B.iterator();
-
-        double sum = 0.0;
-        while(itrA.hasNext() && itrB.hasNext()){
-            double tmpA = itrA.next();
-            double tmpB = itrB.next();
-            sum += (tmpA-tmpB)*(tmpA-tmpB);
-        }
-        return Math.sqrt(sum);
-    }
-    public double cosineSimilarity(ArrayList<Double> A, ArrayList<Double> B){
-        if(A.size() != this.dim || B.size() != this.dim){
-            throw new ArrayIndexOutOfBoundsException("Cannot calculate cosine similarity on unexpected vector dimensions, dimA=%d, dimB=%d", A.size(), B.size());
-        }
-        Iterator<Double> itrA = A.iterator();
-        Iterator<Double> itrB = B.iterator();
-
-        double sum = 0.0;
-        double normA = 0.0;
-        double normB = 0.0;
-        while(itrA.hasNext() && itrB.hasNext()){
-            double tmpA = itrA.next();
-            double tmpB = itrB.next();
-            sum += itrA.next()*itrB.next();
-            normA += tmpA*tmpA;
-            normB += tmpB*tmpB;
-        }
-        if(normA == 0 || normB == 0){
-            throw new ArithmeticException("Cannot calculate cosine similarity using a vector of norm zero");
-        }
-        return sum/(Math.sqrt(normA)*Math.sqrt(normB));
+    public boolean isEmpty(){
+        return this.zeroLevel.isEmpty();
     }
 
-    public int addVector(ArrayList<Double> vec) {
-        return this.insert(vec);
+    public int addVector(ArrayList<Double> data) {
+        return this.insert(data);
     }
 
-    public int insert(ArrayList<Double> q) {
+    public int insert(ArrayList<Double> data) {
         //Check dimension and values of vector input and warn if it's bad.
         return 0;
     }
 
-    public ArrayList<Vertex> knnSearch(Vertex )
+    public ArrayList<Vertex> searchKnn(ArrayList<Double> data){
+        return searchKnn(data, noFilter);
+    }
+
+    //We are using the hnswlib as a base which consolidates a lot of the paper code
+    public ArrayList<Pair<Vertex,Double>> searchKnn(ArrayList<Double> queryData, Function<Vertex, Boolean> isAllowed){
+        //TODO BEFORE COMMIT: WRAP IN A TRY CLAUSE
+
+        PriorityQueue<Pair<Vertex,Double>> result = new PriorityQueue<>();
+        //PriorityQueue<Pair<Vertex,Double>> result = new PriorityQueue<>(Comparator.reverseOrder());
+        if(hGraph.isEmpty()){
+            return new ArrayList<>(result);
+        }
+        Vertex currObj = enterpoint_vertex;
+        //hnswlib has an optimization where for non-base layers they just perform greedy searches.
+        if(hnswlibGreedy) {
+            double currdist = dist.apply(new Pair<currObj.data(), queryData >);
+            for (int level = maxLevel; level > 0; level--) {
+                boolean changed = true;
+                while (changed) {
+                    changed = false;
+                    Iterator<Vertex> nbrs = hGraph[level-1].getNeighbors(currObj,level);
+                    //metric_hops++;
+                    while (nbrs.hasNext()) {
+                        //metric_distance_computations+=1;
+                        Vertex cand = nbrs.next();
+                        double d = dist.apply(new Pair<queryData, cand.data() >);
+                        if (d < currdist) {
+                            currdist = d;
+                            currObj = cand;
+                            changed = true;
+                        }
+                    }
+                }
+            }
+        } else {
+            for(int level = maxLevel; level > 0; level--){
+                PriorityQueue<Pair<Vertex,Double>> W = searchLayer(queryData, currObj, level, noFilter);
+                currObj = W.peek().getLeft();
+                W.clear();
+            }
+        }
+        PriorityQueue<Pair<Vertex, Double>> topCandidates = searchLayer(queryData, currObj, 0, isAllowed);
+        // Return closest k verticies in desired order
+        while (topCandidates.size() > k) {
+            topCandidates.remove();
+        }
+        while (topCandidates.size() > 0){
+            result.add(topCandidates.remove();
+        }
+        return new ArrayList<>(result);
+    }
 
 }

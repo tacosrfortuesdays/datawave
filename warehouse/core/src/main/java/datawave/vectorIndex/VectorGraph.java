@@ -3,6 +3,7 @@ package datawave.vectorIndex;
 import java.util.Iterator;
 
 public abstract class VectorGraph {
+    abstract public int isEmpty();
     abstract public void addVertex(Vertex v);
 
     abstract public void removeVertex(Vertex v);
@@ -21,5 +22,6 @@ public abstract class VectorGraph {
         this.removeDirectedEdge(y, x);
     }
 
-    abstract public Iterator<Vertex> getNeighbors(Vertex v);
+    abstract public Iterator<Vertex> getGraph(int level);
+    abstract public Iterator<Vertex> getNeighbors(Vertex v, int level);
 }
