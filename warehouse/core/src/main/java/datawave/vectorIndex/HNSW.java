@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 
 public class HNSW {
@@ -21,6 +22,8 @@ public class HNSW {
     private final int dim;
 
     ArrayList<VectorGraph> hGraph;
+    Vertex entryPoint;
+    int entryPointLevel;
     private static final Function<Pair<List<Double>, List<Double>>, Double> dist = a -> Distance.l2Distance(a.getLeft(), a.getRight());
 
     public HNSW(int dim) {
@@ -45,12 +48,73 @@ public class HNSW {
     }
 
     public int addVector(ArrayList<Double> data) {
-        return this.insert(data);
+        return this.addPoint(data);
     }
 
-    public int insert(ArrayList<Double> data) {
+    public String addPoint(ArrayList<Double> data) {
         //Check dimension and values of vector input and warn if it's bad.
-        return 0;
+        //Locking note: hnswlib tracks the current number of elements in memory
+        // we will want to prevent creating nodes with same somehow.
+
+        //we will change to datawave style uid eventually, for now just use a random uuid
+        String uuid = UUID.randomUUID().toString();
+        Vertex v = new Vertex(uuid, data.toArray());
+        addPoint(v);
+        return uuid;
+    }
+
+    public void addPoint(Vertex newVertex){
+        //Locking note: hnswlib locks all operations on uuid label at the start
+        PriorityQueue<Pair<Vertex, Double>> nearest = new ArrayList<>();
+        int newLevel = getRandomLevel();
+
+        ArrayList<Double> data = newVertex.data();
+        ArrayList<Vertex> currEntries = new ArrayList<>();
+        if(entryPoint == null) {
+            entryPoint = newVertex;
+            entryPointLevel = newLevel;
+            return;
+        }
+
+        currEntries.add(entryPoint);
+        for(int currLevel = entryPointLevel; currLevel>newLevel; currLevel--){
+            nearest = searchLayer(data, currEntries, currLevel, 1, noFilter);
+            currEntries = new ArrayList<>();
+            currEntries.add(nearest.remove().getFirst());
+        }
+        for(int currLevel = Math.min(entryPointLevel,newLevel); currLevel>=0; currLevel--){
+            nearest = searchLayer(data, currEntries, currEntries, currLevel, this.efConstruction, noFilter);
+            PriorityQueue<Pair<Vertex, Double>> neighbors = selectNeighbors(data, nearest, currLevel);
+            mutuallyConnectNewElement(newVertex, neighbors, currLevel);
+            currEntries = nearest;
+        }
+
+        //Reset entry point if at a higher level
+        if(newLevel > entryPointLevel){
+           entryPoint = newVertex;
+           entryPointLevel = newLevel;
+        }
+    }
+
+    public void mutuallyConnectNewElement(Vertex v, ArrayList<Vertex> neighbors, int currLevel){
+        VectorGraph currGraph = this.hGraph[currLevel];
+        //Add new biderectional edges
+        for(Pair<Vertex, Double> neighborPair : neighbors){
+            currGraph.addEdge(neighborPair.getFirst(), v);
+        }
+        //Shrink connections as needed
+        //Note: THis may result in disconnectedness in the graph
+        for(Pair<Vertex, Double> neighborPair : neighbors){
+            Vertex neighborVertex = neighborPair.getFirst();
+            List<Vertex> neighborhood = currGraph.getNeighborList(neighborVertex, currLevel);
+            if(neighborhood.size()> Mmax){
+                PriorityQueue<Pair<Vertex, Double>> newNeighborhood = selectNeighbors(data, neighborhood, currLevel);
+                //Replace neighborhood
+
+
+            }
+        }
+
     }
 
     public ArrayList<Vertex> searchKnn(ArrayList<Double> data) {
@@ -58,7 +122,7 @@ public class HNSW {
     }
 
     //We are using the hnswlib as a base which consolidates a lot of the paper code
-    public ArrayList<Pair<Vertex, Double>> searchKnn(ArrayList<Double> queryData, Function<Vertex, Boolean> isAllowed) {
+    public ArrayList<Pair<Vertex, Double>> searchKnn(ArrayList<Double> queryData, int numResults, Function<Vertex, Boolean> isAllowed) {
         //TODO BEFORE COMMIT: WRAP IN A TRY CLAUSE
 
         PriorityQueue<Pair<Vertex, Double>> result = new PriorityQueue<>();
@@ -94,7 +158,7 @@ public class HNSW {
         }
         PriorityQueue<Pair<Vertex, Double>> topCandidates = searchLayer(queryData, currObj, 0, isAllowed);
         // Return closest k verticies in desired order
-        while (topCandidates.size() > k) {
+        while (topCandidates.size() > numResults) {
             topCandidates.remove();
         }
         while (topCandidates.size() > 0) {
@@ -103,7 +167,6 @@ public class HNSW {
         return new ArrayList<>(result);
     }
 
-    //hnswlib always uses single entry points, the paper calls for multiple entry points
     public PriorityQueue<Pair<Vertex, Double>> searchLayer(ArrayList<Double> queryData, ArrayList<Vertex> entryPoints, int layer, Function<Vertex, Boolean> isAllowed) {
         Set<String> visited = new HashSet<>();
         PriorityQueue<Pair<Vertex, Double>> candidateSet = new PriorityQueue<>();  // C set from paper
@@ -112,7 +175,7 @@ public class HNSW {
 
         for (Vertex currObj : entryPoints) {
             if (isAllowed.apply(currObj)) {
-                bound = dist.apply(new Pair<currObj.data(), queryData >);
+                bound = dist.apply(new Pair<>(currObj.data(), queryData);
                 Pair<Vertex, Double> pair = new Pair<>(currObj, bound);
                 topCandidates.add(pair);
                 candidateSet.add(pair);

@@ -5,10 +5,10 @@ import org.apache.log4j.Logger;
 
 public class Vertex {
     private static final Logger log = Logger.getLogger(Vertex.class);
-    private final String uid;
-    private final byte[] data;
+    protected final String uid;
+    protected final double[] data;
 
-    Vertex(final String uid, final byte[] data) {
+    Vertex(final String uid, final double[] data) {
         this.uid = uid;
         this.data = data;
     }
@@ -17,7 +17,7 @@ public class Vertex {
         return this.uid;
     }
 
-    public byte[] data() {
+    public double[] data() {
         return this.data;
     }
 

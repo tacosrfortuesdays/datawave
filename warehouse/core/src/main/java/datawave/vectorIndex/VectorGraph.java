@@ -1,9 +1,12 @@
 package datawave.vectorIndex;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public abstract class VectorGraph {
-    abstract public int isEmpty();
+    abstract public boolean isEmpty();
     abstract public void addVertex(Vertex v);
 
     abstract public void removeVertex(Vertex v);
@@ -22,6 +25,14 @@ public abstract class VectorGraph {
         this.removeDirectedEdge(y, x);
     }
 
-    abstract public Iterator<Vertex> getGraph(int level);
     abstract public Iterator<Vertex> getNeighbors(Vertex v, int level);
+
+    public List<Vertex> getNeighborList(Vertex v, int level){
+        ArrayList<Vertex> neighbors = new ArrayList<>();
+        Iterator<Vertex> itr = this.getNeighbors(v, level);
+        while(itr.hasNext()){
+            neighbors.add(itr.next());
+        }
+        return neighbors;
+    }
 }

@@ -7,13 +7,14 @@ import java.util.Iterator;
 
 public final class Distance {
     private Distance() {}
-    public static double l2Distance(List<Double> a, List<Double> b){
-        if(a.size() != b.size()){
+    public static double l2Distance(List<Double> a, List<Double> b) {
+        if (a.size() != b.size()) {
             throw new ArrayIndexOutOfBoundsException(StringUtils.format("Attempting to perform inner product on mismatched vector dimensions, dimA={}, dimB={}", a.size(), b.size()));
         }
-        Iterator<Double> itrA = a.iterator();
-        Iterator<Double> itrB = b.iterator();
+        return l2Distance(a.iterator(), b.iterator());
+    }
 
+    public static double l2Distance(Iterator<Double> itrA, Iterator<Double> itrB){
         double sum = 0.0;
         while(itrA.hasNext() && itrB.hasNext()){
             double diff = itrA.next()-itrB.next();

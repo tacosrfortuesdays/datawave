@@ -64,6 +64,10 @@ public class MemoryVectorGraph extends VectorGraph {
         }
     }
 
+    public boolean isEmpty(){
+        return this.adjVertices.isEmpty();
+    }
+
     public Iterator<Vertex> getNeighbors(Vertex x) {
         return adjVertices.get(x).iterator();
     }
