@@ -17,14 +17,21 @@ public class MemoryVectorGraph extends VectorGraph {
     private static final Logger log = Logger.getLogger(MemoryVectorGraph.class);
 
     private final Map<Vertex,List<Vertex>> adjVertices;
+    private final Map<String,Vertex> vertices; //for hnsw, vertices index is only used on bottom level grpah
 
     public MemoryVectorGraph() {
         super();
         this.adjVertices = new HashMap<>();
+        this.vertices = new HashMap<>();
     }
 
-    @VisibleForTesting
-    public int numVertices() {
+
+    public Vertex getVertex(String uuid) {
+        return vertices.get(uuid);
+    }
+
+    @Override
+    public int numVerticies() {
         return adjVertices.size();
     }
 
@@ -39,6 +46,7 @@ public class MemoryVectorGraph extends VectorGraph {
 
     public void addVertex(Vertex v) {
         adjVertices.putIfAbsent(v, new ArrayList<>());
+        vertices.putIfAbsent(v.uid(), v);
     }
 
     public void removeVertex(Vertex u) {
@@ -49,7 +57,8 @@ public class MemoryVectorGraph extends VectorGraph {
         }
 
         // remove outgoing edges and node
-        adjVertices.remove(new Vertex(u.uid(), new byte[] {}));
+        adjVertices.remove(new Vertex(u.uid(), new double[] {}));
+        vertices.remove(u.uid());
     }
 
     public void addDirectedEdge(Vertex source, Vertex sink) {
@@ -64,15 +73,16 @@ public class MemoryVectorGraph extends VectorGraph {
         }
     }
 
+    @Override
+    public Iterator<Vertex> getNeighbors(Vertex v, int level) {
+        return adjVertices.get(v).iterator();
+    }
+
     public boolean isEmpty(){
         return this.adjVertices.isEmpty();
     }
 
-    public Iterator<Vertex> getNeighbors(Vertex x) {
-        return adjVertices.get(x).iterator();
-    }
-
     public List<Vertex> getNeighborList(String uid) {
-        return adjVertices.get(new Vertex(uid, new byte[] {}));
+        return adjVertices.get(new Vertex(uid, new double[] {}));
     }
 }

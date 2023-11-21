@@ -19,18 +19,19 @@ public class HNSW {
     private final int Mmax;
     private final int efConstruction;
     private final int maxLevel;
+    private final long maxElements;
     private final int dim;
 
     ArrayList<VectorGraph> hGraph;
     Vertex entryPoint;
     int entryPointLevel;
-    private static final Function<Pair<List<Double>, List<Double>>, Double> dist = a -> Distance.l2Distance(a.getLeft(), a.getRight());
+    private static final Function<Pair<List<Double>, List<Double>>, Double> dist = a -> Distance.l2Distance(a.getFirst(), a.getSecond());
 
     public HNSW(int dim) {
-        this(dim, 20, 2, 3, 4);
+        this(dim, 20, 2, 3, 4, 50000000);
     }
 
-    public HNSW(int dim, int M, int Mmax, int efConstruction, int maxLevel) {
+    public HNSW(int dim, int M, int Mmax, int efConstruction, int maxLevel, long maxElements) {
         this.hGraph = new ArrayList<>(maxLevel);
         for (int i = 0; i < maxLevel; i++) {
             VectorGraph g = new MemoryVectorGraph();
@@ -41,6 +42,7 @@ public class HNSW {
         this.efConstruction = efConstruction;
         this.maxLevel = maxLevel;
         this.dim = dim;
+        this.maxElements = maxElements;
     }
 
     public boolean isEmpty() {
@@ -58,11 +60,72 @@ public class HNSW {
 
         //we will change to datawave style uid eventually, for now just use a random uuid
         String uuid = UUID.randomUUID().toString();
-        Vertex v = new Vertex(uuid, data.toArray());
-        addPoint(v);
+        Vertex v = new Vertex(uuid, data.toArray();
+        addPoint(v, false);
         return uuid;
     }
 
+    public void addPoint(Vertex newVertex, boolean replaceDeleted){
+        if(!this.allowReplaceDeleted && replaceDeleted) {
+            throw new RuntimeException("Unable to replace deleted point when replacement has been disabled");
+        }
+        // lock all operations with element by label
+        // std::unique_lock <std::mutex> lock_label(getLabelOpMutex(label));
+        // Handle without replacing deleted.
+        if (!replaceDeleted) {
+            addPoint(newVertex,  -1);
+            return;
+        }
+        //Check if there is a vacant place
+        int internalIDReplaced = 0;
+        //std::unique_lock <std::mutex> lock_deleted_elements(deleted_elements_lock);
+        boolean isVacantPlace = !this.deletedElements.isEmpty();
+        // If there is no vacant place, then add or update point
+        if (!isVacantPlace){
+            // lock_deleted_elements.unlock();
+            addPoint(newVertex,  -1);
+            return;
+        }
+        // else add point vacant place
+        internalIDReplaced = this.deletedElements.get(0);
+        deletedElements.erase(internalIDReplaced);
+        // lock_deleted_elements.unlock();
+
+            // we assume that there are no concurrent operations on deleted element
+            String labelReplaced = getExternalLabel(internalIDReplaced);
+            setExternalLabel(internalIDReplaced, newVertex.uid);
+
+            //std::unique_lock <std::mutex> lock_table(label_lookup_lock);
+            labelLookup.erase(label_replaced);
+            labelLookup[label] = internalIDReplaced;
+            lockTable.unlock();
+
+            unmarkDeletedInternal(internalIDReplaced);
+            updatePoint(newVertex, internaIDReplaced, 1.0);
+    }
+
+    String addPoint(Vertex newVertex, int level) {
+        //Check if the element with the same label/uid already exists.
+        //If so, update it
+        //std::unique_lock <std::mutex> lock_table(label_lookup_lock);
+        Vertex search = hGraph.get(0).getVertex(newVertex.uid());
+        if(search != null) {
+            if (this.allowReplaceDeleted) {
+                if (isMarkedDeleted(search)){
+                    unmarkDeletedInternal(search);
+                }
+                updatePoint(newVertex, search, 1.0);
+                return search.uid();
+            }
+        }
+        if (hGraph.get(0).numVerticies() >= this.maxElements){
+            throw new RuntimeException("The number of elements exceeds the specified limit");
+        }
+
+
+    }
+
+    /*
     public void addPoint(Vertex newVertex){
         //Locking note: hnswlib locks all operations on uuid label at the start
         PriorityQueue<Pair<Vertex, Double>> nearest = new ArrayList<>();
@@ -94,7 +157,7 @@ public class HNSW {
            entryPoint = newVertex;
            entryPointLevel = newLevel;
         }
-    }
+    }*/
 
     public void mutuallyConnectNewElement(Vertex v, ArrayList<Vertex> neighbors, int currLevel){
         VectorGraph currGraph = this.hGraph[currLevel];

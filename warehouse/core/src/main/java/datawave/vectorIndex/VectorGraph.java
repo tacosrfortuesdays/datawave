@@ -9,6 +9,9 @@ public abstract class VectorGraph {
     abstract public boolean isEmpty();
     abstract public void addVertex(Vertex v);
 
+    abstract public Vertex getVertex(String uuid);
+    abstract public int numVerticies();
+
     abstract public void removeVertex(Vertex v);
 
     abstract public void addDirectedEdge(Vertex source, Vertex sink);
