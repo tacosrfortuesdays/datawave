@@ -1,4 +1,4 @@
-package datawave.vectorIndex;
+package datawave.vectorindex;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -6,9 +6,10 @@ import org.apache.log4j.Logger;
 public class Vertex {
     private static final Logger log = Logger.getLogger(Vertex.class);
     protected final String uid;
-    protected final double[] data;
+    protected Double[] data;
+    protected boolean markedDeleted;
 
-    Vertex(final String uid, final double[] data) {
+    Vertex(final String uid, final Double[] data) {
         this.uid = uid;
         this.data = data;
     }
@@ -17,8 +18,19 @@ public class Vertex {
         return this.uid;
     }
 
-    public double[] data() {
+    public Double[] data() {
         return this.data;
+    }
+
+    public void setData(final Double[] data){
+        this.data = data;
+    }
+
+    public boolean isMarkedDeleted(){
+        return markedDeleted;
+    }
+    public void setDeleted(boolean deleted){
+        this.markedDeleted = deleted;
     }
 
     @Override

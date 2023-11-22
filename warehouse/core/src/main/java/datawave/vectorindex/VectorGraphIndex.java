@@ -1,4 +1,4 @@
-package datawave.vectorIndex;
+package datawave.vectorindex;
 
 import java.util.List;
 

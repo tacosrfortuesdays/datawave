@@ -1,4 +1,4 @@
-package datawave.vectorIndex;
+package datawave.vectorindex;
 
 import org.apache.hadoop.util.StringUtils;
 
@@ -23,13 +23,16 @@ public final class Distance {
         return Math.sqrt(sum);
     }
 
-    public static double cosineSimilarityDistance(List<Double> a, List<Double> b){
-        if(a.size() != b.size()){
+    public static double cosineSimilarityDistance(List<Double> a, List<Double> b) {
+        if (a.size() != b.size()) {
             throw new ArrayIndexOutOfBoundsException(StringUtils.format("Attempting to perform cosine similarity on mismatched vector dimensions, dimA={}, dimB={}", a.size(), b.size()));
         }
         Iterator<Double> itrA = a.iterator();
         Iterator<Double> itrB = b.iterator();
+        return cosineSimilarityDistance(itrA, itrB);
+    }
 
+    public static double cosineSimilarityDistance(Iterator<Double> itrA, Iterator<Double> itrB){
         double sum = 0.0;
         double normA = 0.0;
         double normB = 0.0;
@@ -47,13 +50,15 @@ public final class Distance {
     }
 
     //Inner product distance assumes vectors are norm 1.
-    public static double innerProductDistance(List<Double> a, List<Double> b){
-        if(a.size() != b.size()){
+    public static double innerProductDistance(List<Double> a, List<Double> b) {
+        if (a.size() != b.size()) {
             throw new ArrayIndexOutOfBoundsException(StringUtils.format("Attempting to perform cosine similarity on mismatched vector dimensions, dimA={}, dimB={}", a.size(), b.size()));
         }
         Iterator<Double> itrA = a.iterator();
         Iterator<Double> itrB = b.iterator();
-
+        return innerProductDistance(itrA, itrB);
+    }
+    public static double innerProductDistance(Iterator<Double> itrA, Iterator<Double> itrB){
         double sum = 0.0;
         while(itrA.hasNext() && itrB.hasNext()){
             sum += itrA.next()*itrB.next();

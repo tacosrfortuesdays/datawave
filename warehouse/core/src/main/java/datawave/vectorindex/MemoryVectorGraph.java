@@ -1,4 +1,4 @@
-package datawave.vectorIndex;
+package datawave.vectorindex;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,6 +14,7 @@ import com.google.common.annotations.VisibleForTesting;
  * Code is modified from https://www.baeldung.com/java-graphs
  */
 public class MemoryVectorGraph extends VectorGraph {
+    private int cnt = 0;
     private static final Logger log = Logger.getLogger(MemoryVectorGraph.class);
 
     private final Map<Vertex,List<Vertex>> adjVertices;
@@ -32,21 +33,25 @@ public class MemoryVectorGraph extends VectorGraph {
 
     @Override
     public int numVerticies() {
-        return adjVertices.size();
+        return cnt;
     }
 
     @VisibleForTesting
     public int numEdges() {
-        int cnt = 0;
+        int edgeCnt = 0;
         for (List<Vertex> L : adjVertices.values()) {
-            cnt += L.size();
+            edgeCnt += L.size();
         }
-        return cnt;
+        return edgeCnt;
     }
 
     public void addVertex(Vertex v) {
         adjVertices.putIfAbsent(v, new ArrayList<>());
-        vertices.putIfAbsent(v.uid(), v);
+        Vertex foundVert = vertices.putIfAbsent(v.uid(), v);
+        if (foundVert == null) {
+            cnt++;
+        }
+
     }
 
     public void removeVertex(Vertex u) {

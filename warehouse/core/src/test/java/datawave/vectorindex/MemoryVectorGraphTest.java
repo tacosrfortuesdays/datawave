@@ -1,4 +1,4 @@
-package datawave.vectorIndex;
+package datawave.vectorindex;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -10,8 +10,6 @@ import org.apache.hadoop.shaded.org.apache.commons.collections.IteratorUtils;
 import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
-
-import datawave.iterators.CountMetadataCombiner;
 
 //Will make this abstract to test accumulo and in memory implementations
 public class MemoryVectorGraphTest {

@@ -1,6 +1,5 @@
-package datawave.vectorIndex;
+package datawave.vectorindex;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -15,6 +14,7 @@ public abstract class VectorGraph {
     abstract public void removeVertex(Vertex v);
 
     abstract public void addDirectedEdge(Vertex source, Vertex sink);
+
 
     public void addEdge(Vertex x, Vertex y) {
         this.addDirectedEdge(x, y);

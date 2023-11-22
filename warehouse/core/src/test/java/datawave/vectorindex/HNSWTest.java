@@ -1,4 +1,4 @@
-package datawave.vectorIndex;
+package datawave.vectorindex;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class HNSWTest {
-        private static final Logger log = Logger.getLogger(datawave.vectorIndex.HNSWTest.class);
+        private static final Logger log = Logger.getLogger(datawave.vectorindex.HNSWTest.class);
         private HNSW index;
         private final ArrayList<Double> VecA = new ArrayList<>(Arrays.asList(0.25, 0.91, 0.32, 0.5, 0.5));
         private final ArrayList<Double> VecB = new ArrayList<>(Arrays.asList(1.0, 0.22, 0.32, 0.5, 0.5));
